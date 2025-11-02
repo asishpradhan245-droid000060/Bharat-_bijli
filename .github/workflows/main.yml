@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -31,7 +31,7 @@ jobs:
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip commandlinetools-linux-10406996_latest.zip
+          unzip -q commandlinetools-linux-10406996_latest.zip
           mv cmdline-tools latest
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
@@ -61,8 +61,8 @@ jobs:
           [buildozer]
           log_level = 2
           warn_on_root = 0
-          android.sdk_path = $HOME/android-sdk
-          android.ndk_path = $HOME/android-sdk/ndk/25.2.9519653
+          android.sdk_path = /home/runner/android-sdk
+          android.ndk_path = /home/runner/android-sdk/ndk/25.2.9519653
           android.api = 33
           android.minapi = 21
           android.accept_sdk_license = True
@@ -79,4 +79,5 @@ jobs:
         with:
           name: BharatBijli-v1.0
           path: bin/*.apk
+
 
