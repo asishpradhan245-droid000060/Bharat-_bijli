@@ -27,16 +27,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5-dev libstdc++6 git wget
 
-      - name: Install Android SDK Build-Tools (fix for AIDL)
+      - name: Install Android SDK + Build Tools
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
+          
+          # Download official Android cmdline tools
           wget https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
-          unzip commandlinetools-linux-10406996_latest.zip -d latest
-          yes | $HOME/android-sdk/cmdline-tools/latest/bin/sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          unzip commandlinetools-linux-10406996_latest.zip
+          mv cmdline-tools latest
+          
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
+          
+          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses
+          yes | sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-          echo "export ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-          echo "export PATH=$HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin:$HOME/android-sdk/build-tools/33.0.2:$PATH" >> $GITHUB_ENV
+          echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
+          echo "PATH=$PATH" >> $GITHUB_ENV
 
       - name: Prepare buildozer.spec
         run: |
@@ -59,14 +67,14 @@ jobs:
           warn_on_root = 0
           EOF
 
-      - name: Build APK with Buildozer
+      - name: Build APK
         run: |
           cp electric.py main.py
           export BUILDOZER_WARN_ON_ROOT=0
           buildozer -v android debug
 
-      - name: Upload APK artifact
+      - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Bharat-Bijli-APK
+          name: BharatBijli-v1.0
           path: bin/*.apk
