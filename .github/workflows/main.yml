@@ -25,7 +25,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5
+          sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5-dev libstdc++6 git
 
       - name: Build APK with Buildozer
         run: |
@@ -39,8 +39,11 @@ jobs:
           sed -i 's/orientation =.*/orientation = portrait/' buildozer.spec
           sed -i 's/icon.filename =.*/icon.filename = logo.png/' buildozer.spec
           sed -i 's/^\(#\)\?android\.permissions =.*/android.permissions = INTERNET/' buildozer.spec
-          # ✅ This line fixes your error
+          # ✅ Fixes the "source.dir missing" error
           sed -i 's|^#*source.dir =.*|source.dir = .|' buildozer.spec
+
+          # Optional: Increase timeout for large builds
+          export BUILDOZER_WARN_ON_ROOT=0
           buildozer -v android debug
 
       - name: Upload APK artifact
