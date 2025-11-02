@@ -12,7 +12,7 @@ jobs:
       - name: 📦 Checkout repository
         uses: actions/checkout@v4
 
-      - name: 🐍 Set up Python 3.11
+      - name: 🐍 Setup Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -20,25 +20,29 @@ jobs:
       - name: 🔧 Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5-dev libstdc++6 git wget
+          sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5-dev git wget
           python -m pip install --upgrade pip
           pip install buildozer cython virtualenv
 
-      - name: 🧰 Install Android SDK + Build Tools
+      - name: 🧰 Install Android SDK + Build Tools (Force License Acceptance)
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
           cd $HOME/android-sdk/cmdline-tools
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-10406996_latest.zip
           unzip -q commandlinetools-linux-10406996_latest.zip
           mv cmdline-tools latest
+
           export ANDROID_HOME=$HOME/android-sdk
           export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH
-          yes | sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
-          yes | sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platform-tools" "platforms;android-33" "build-tools;33.0.2" "ndk;25.2.9519653"
+
           echo "ANDROID_HOME=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> $GITHUB_ENV
           echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/25.2.9519653" >> $GITHUB_ENV
-          echo "PATH=$PATH" >> $GITHUB_ENV
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
       - name: 🧾 Create buildozer.spec
         run: |
@@ -66,26 +70,20 @@ jobs:
           android.accept_sdk_license = True
           EOF
 
-      - name: 🧠 Prepare app source
+      - name: 🧠 Prepare source
         run: |
           cp electric.py main.py
-          echo "✅ Source prepared"
+          echo "✅ Source ready"
 
-      - name: ⚙️ Build Debug APK
+      - name: ⚙️ Build APK
         run: |
           export BUILDOZER_WARN_ON_ROOT=0
           buildozer -v android debug
 
-      - name: ⚙️ Build Release APK
-        run: |
-          export BUILDOZER_WARN_ON_ROOT=0
-          buildozer -v android release
-
-      - name: 📤 Upload APKs
+      - name: 📤 Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: BharatBijli-APKs
-          path: |
-            bin/*.apk
+          name: BharatBijli-APK
+          path: bin/*.apk
 
 
