@@ -27,22 +27,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5-dev libstdc++6 git
 
+      - name: Prepare buildozer.spec manually
+        run: |
+          # ✅ Create buildozer.spec manually to avoid init error
+          cat > buildozer.spec << 'EOF'
+          [app]
+          title = Bharat Bijli
+          package.name = BHARATBIJLI
+          package.domain = org.BHARATBIJLI
+          source.dir = .
+          source.include_exts = py,png,jpg,kv,atlas
+          version = 1.0
+          requirements = python3,kivy,requests
+          orientation = portrait
+          icon.filename = logo.png
+          android.permissions = INTERNET
+          fullscreen = 0
+
+          [buildozer]
+          log_level = 2
+          warn_on_root = 0
+          EOF
+
       - name: Build APK with Buildozer
         run: |
-          buildozer init
           cp electric.py main.py
-          sed -i 's/package.name =.*/package.name = BHARAT BIJLI/' buildozer.spec
-          sed -i 's/package.domain =.*/package.domain = org.BHARATBIJLI/' buildozer.spec
-          sed -i 's/source.include_exts =.*/source.include_exts = py,png,jpg,kv,atlas/' buildozer.spec
-          sed -i 's/requirements = python3/requirements = python3,kivy,requests/' buildozer.spec
-          sed -i 's/version = 1.0.0/version = 1.0/' buildozer.spec
-          sed -i 's/orientation =.*/orientation = portrait/' buildozer.spec
-          sed -i 's/icon.filename =.*/icon.filename = logo.png/' buildozer.spec
-          sed -i 's/^\(#\)\?android\.permissions =.*/android.permissions = INTERNET/' buildozer.spec
-          # ✅ Fixes the "source.dir missing" error
-          sed -i 's|^#*source.dir =.*|source.dir = .|' buildozer.spec
-
-          # Optional: Increase timeout for large builds
           export BUILDOZER_WARN_ON_ROOT=0
           buildozer -v android debug
 
