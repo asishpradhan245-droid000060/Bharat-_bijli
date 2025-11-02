@@ -1,4 +1,5 @@
-name: Android Build
+
+name: Build Android APK
 
 on:
   workflow_dispatch:
@@ -11,23 +12,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.11
-        uses: actions/setup-python@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install -y python3-pip zip openjdk-17-jdk
-          pip install buildozer cython
+          python -m pip install --upgrade pip
+          pip install buildozer cython virtualenv
 
-      - name: Build APK
+      - name: Install system dependencies
         run: |
-          buildozer android debug
+          sudo apt-get update
+          sudo apt-get install -y openjdk-17-jdk unzip zip libncurses5
 
-      - name: Upload APK
+      - name: Build APK with Buildozer
+        run: |
+          buildozer init
+          cp electric.py main.py
+          sed -i 's/package.name =.*/package.name = BHARAT BIJLI/' buildozer.spec
+          sed -i 's/package.domain =.*/package.domain = org.BHARATBIJLI/' buildozer.spec
+          sed -i 's/source.include_exts =.*/source.include_exts = py,png,jpg,kv,atlas/' buildozer.spec
+          sed -i 's/requirements = python3/requirements = python3,kivy,requests/' buildozer.spec
+          sed -i 's/version = 1.0.0/version = 1.0/' buildozer.spec
+          sed -i 's/orientation =.*/orientation = portrait/' buildozer.spec
+          sed -i 's/icon.filename =.*/icon.filename = logo.png/' buildozer.spec
+          sed -i 's/^\(#\)\?android\.permissions =.*/android.permissions = INTERNET/' buildozer.spec
+          # ✅ This line fixes your error
+          sed -i 's|^#*source.dir =.*|source.dir = .|' buildozer.spec
+          buildozer -v android debug
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: bharat-bijli-apk
+          name: Bharat-Bijli-APK
           path: bin/*.apk
