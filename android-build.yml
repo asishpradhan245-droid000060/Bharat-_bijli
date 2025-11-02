@@ -1,0 +1,28 @@
+
+name: Android Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system deps
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip git zip unzip openjdk-17-jdk build-essential
+      - name: Install pip packages
+        run: |
+          pip install --upgrade pip
+          pip install buildozer Cython==0.29.36
+      - name: Build APK
+        run: |
+          buildozer -v android debug
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: bin/*.apk
